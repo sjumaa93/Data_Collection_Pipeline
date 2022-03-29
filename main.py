@@ -1,18 +1,14 @@
+import csv
+from re import template
 import selenium
+from bs4 import BeautifulSoup
+
 from selenium.webdriver import Chrome
 driver = Chrome('./chromedriver')
-driver.maximize_window()
 
-driver.get('https://www.amazon.co.uk/')
-driver.implicitly_wait(10)
-driver.find_element_by_xpath("//input[contains(@id,'search')]").send_keys("mobile phone")
-#driver.find_element_by_xpath("//span[contains(@class, 'a-size-medium a-color-base a-text-normal'")
+url = 'https://www.amazon.co.uk/s?k=mobile+phones'
+driver.get(url)
 
-phone_names = driver.find_element_by_class_name("a-size-medium a-color-base a-text-normal")
-phone_price = driver.find_element_by_class_name("a-price-whole")
+soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-for phone in phone_names:
-    print(phone.text)
-
-for price in phone_price:
-    print(price.text)
+results = soup.fin_all('div', {'date_'})
