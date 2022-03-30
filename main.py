@@ -1,7 +1,4 @@
-import csv
-from re import template
 import selenium
-from bs4 import BeautifulSoup
 
 from selenium.webdriver import Chrome
 driver = Chrome('./chromedriver')
@@ -9,6 +6,10 @@ driver = Chrome('./chromedriver')
 url = 'https://www.amazon.co.uk/s?k=mobile+phones'
 driver.get(url)
 
-soup = BeautifulSoup(driver.page_source, 'html.parser')
+buttons = driver.find_element_by_xpath('//a[@type="button"]')
 
-results = soup.fin_all('div', {'date_'})
+for button in buttons:
+    if button.text == "Accept Cookies":
+        relevant_button = button
+
+    relevant_button.click()
