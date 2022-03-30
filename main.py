@@ -20,13 +20,11 @@ myphone=[]
 myprice=[]
 
 for phone in phone_name:
-    print(phone.text)
     myphone.append(phone.text)
 
 print("*"*50)
 
 for price in phone_price:
-    print(price.text)
     myprice.append(price.text)
 
 final_list = zip(myphone,myprice)
