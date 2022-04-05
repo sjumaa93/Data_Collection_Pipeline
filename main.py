@@ -1,34 +1,9 @@
-from typing import final
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 
+if __name__ == '__main__':
+    import scraper
+    bot = scraper.Scraper('https://www.amazon.co.uk')
+    bot.accept_cookies("//span[contains(@class,'on-primary')]")
+    bot.search_site("//input[contains(@id, 'search')]",'Mobile Phones')
+    bot.go_button("//input[@value='Go']")
+    bot.findproducts("//span[contains(@class, 'a-size-medium a-color-base a-text-normal')]")
 
-from selenium.webdriver import Chrome
-driver = Chrome('./chromedriver')
-
-url = 'https://www.amazon.co.uk/'
-driver.get(url)
-
-driver.implicitly_wait(10)
-driver.find_element(By.XPATH,"//span[contains(@class,'on-primary')]").click()
-driver.find_element(By.XPATH,"//input[contains(@id, 'search')]").send_keys("Mobile Phones")
-driver.find_element(By.XPATH,"//input[@value='Go']").click()
-
-phone_name = driver.find_elements(By.XPATH,"//span[contains(@class, 'a-size-medium a-color-base a-text-normal')]")
-phone_price = driver.find_elements(By.XPATH,"//span[contains(@class, 'a-price-whole')]")
-
-myphone=[]
-myprice=[]
-
-for phone in phone_name:
-    myphone.append(phone.text)
-
-print("*"*50)
-
-for price in phone_price:
-    myprice.append(price.text)
-
-final_list = zip(myphone,myprice)
-
-for data in list(final_list):
-    print(data)

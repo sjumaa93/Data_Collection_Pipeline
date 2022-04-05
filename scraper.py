@@ -6,36 +6,36 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC 
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome
+import time
 
 
 class Scraper:
-    def __init__(self, url, options=None):
+    def __init__(self, url):
         self.url = url
-        if options:
-            self.driver = Chrome('./chromedriver', options = options)
-        else:
-            self.driver = Chrome('./chromedriver')
+        self.driver = Chrome('./chromedriver')
         self.driver.get(url)
 
     def accept_cookies(self, xpath):
-        cookies_button = self.driver.find_element(By.XPATH, xpath)
-        cookies_button.click()
+        time.sleep(1)
+        self.driver.find_element(By.XPATH, xpath).click()
 
     def search_site(self, xpath, query):
+        time.sleep(1)
         searchbox = self.driver.find_element(By.XPATH, xpath)
         searchbox.send_keys(query)
         searchbox.click()
-        
 
-    def clickgo(self,xpath):
-        go_button = self.driver.find_element(By.XPATH, xpath)
-        go_button.click()
+    def go_button(self,xpath):
+        time.sleep(1)
+        self.driver.find_element(By.XPATH, xpath).click()
 
-    # def findproducts(self,xpath):
-    #     elements = self.driver.find_element(By.XPATH, xpath)
-    #     self.phone = [elements]
-    #     for phone in elements
-
+    def findproducts(self,xpath):
+        time.sleep(5)
+        myphone=[]
+        product_name = self.driver.find_elements(By.XPATH, xpath)
+        for title in product_name:
+            myphone.append(title.text)
+        print(myphone)
 
 
 
