@@ -1,3 +1,4 @@
+from cgi import print_exception
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -7,15 +8,20 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome
 import time
+import pandas as pd
+import uuid
+import json
 
 
 class Scraper:
+
     def __init__(self, url):
         self.url = url
         self.driver = Chrome('./chromedriver')
         self.driver.get(url)
 
     def accept_cookies(self, xpath):
+
         time.sleep(1)
         self.driver.find_element(By.XPATH, xpath).click()
 
@@ -29,45 +35,45 @@ class Scraper:
         time.sleep(1)
         self.driver.find_element(By.XPATH, xpath).click()
 
-    def find_links(self, xp_html, xp_price, xp_title):
+    def find_data(self, xp_html, xp_title, xp_price, xp_asin):
         time.sleep(2)
         link_list = []
         container = self.driver.find_elements(By.XPATH, xp_html)
         for link in container:
             link_list.append(link.find_element(By.TAG_NAME, 'a').get_attribute('href'))
         
-        print(link_list)
-        
+        print(pd.DataFrame(link_list))
+
+        link_list = link_list
         dict_list = {
             'Link':[],
             'Name':[],
-            'Price':[]
+            'Price':[],
+            #'ASIN':[],
+            'UUID':[],
             }
-        for link in link_list[0:4]:
+        for link in link_list[0:6]:
             self.driver.get(link)
             time.sleep(2)
             dict_list['Link'].append(link)
-            price = self.driver.find_element(By.XPATH, xp_price)
-            dict_list['Price'].append(price)
-            name = self.driver.find_element(By.XPATH, xp_title)
+            name = self.driver.find_element(By.XPATH, xp_title).text
             dict_list['Name'].append(name)
+            price = self.driver.find_element(By.XPATH, xp_price).text
+            dict_list['Price'].append(price)
+            #asin = self.driver.find_element(By.ID, xp_asin).text
+            #dict_list['ASIN'].append(asin)
+            id = uuid.uuid4()
+            dict_list['UUID'].append(id)
+
         
-        print(dict_list)
+        
+        print(pd.DataFrame(dict_list))
+        
+
+        file = json.dumps(link_list)
+        with open('file.json', 'w') as f:
+            f.write(file)
+            f.close()
 
     def close_driver(self):
         self.driver.quit()
-
-
-    #def find_product_title(self,xpath):
-    #    time.sleep(5)
-    #    link_list=[]
-    #    product_name = self.driver.find_element(By.XPATH, xpath).__getattribute__('href')
-    #    for title in product_name:
-    #        link_list.append(title.text)
-    #    print(link_list)
-
-    #def find_product_title(self, xpath):
-    #    self.container = self.driver.find_element(By.XPATH, xpath)
-
-
-    # div container - div class = "a-section a-spacing-none s-padding-right-small s-title-instructions-style"
