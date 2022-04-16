@@ -7,23 +7,27 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC 
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome
+#from webdriver_manager.chrome import ChromeDriverManager
+
 import time
 import pandas as pd
 import uuid
 import json
 
-
-class Scraper:
+class Web_Scraper:
 
     def __init__(self, url):
         self.url = url
+        #self.driver = Chrome(ChromeDriveManager().install())
         self.driver = Chrome('./chromedriver')
         self.driver.get(url)
 
     def accept_cookies(self, xpath):
-
-        time.sleep(1)
-        self.driver.find_element(By.XPATH, xpath).click()
+        try:
+            time.sleep(1)
+            self.driver.find_element(By.XPATH, xpath).click()
+        except:
+            print('No cookies found')
 
     def search_site(self, xpath, query):
         time.sleep(1)
@@ -35,24 +39,22 @@ class Scraper:
         time.sleep(1)
         self.driver.find_element(By.XPATH, xpath).click()
 
-    def find_data(self, xp_html, xp_title, xp_price, xp_asin):
+
+    def find_data(self, xp_html, xp_title, xp_price):
         time.sleep(2)
         link_list = []
         container = self.driver.find_elements(By.XPATH, xp_html)
         for link in container:
             link_list.append(link.find_element(By.TAG_NAME, 'a').get_attribute('href'))
         
-        print(pd.DataFrame(link_list))
-
-        link_list = link_list
         dict_list = {
             'Link':[],
             'Name':[],
             'Price':[],
-            #'ASIN':[],
             'UUID':[],
             }
-        for link in link_list[0:6]:
+
+        for link in link_list[0:4]:
             self.driver.get(link)
             time.sleep(2)
             dict_list['Link'].append(link)
@@ -64,12 +66,13 @@ class Scraper:
             #dict_list['ASIN'].append(asin)
             id = uuid.uuid4()
             dict_list['UUID'].append(id)
-
-        
         
         print(pd.DataFrame(dict_list))
-        
 
+        return dict_list
+    
+    def create_json(self):
+        link_list = self.find_data()
         file = json.dumps(link_list)
         with open('file.json', 'w') as f:
             f.write(file)
