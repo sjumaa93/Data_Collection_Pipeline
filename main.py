@@ -9,6 +9,7 @@ def main():
     scraper.create_json()
     scraper.json_to_sql()
     scraper.close_driver()
+    scraper.remove_local_images()
 
 if __name__ == '__main__':
     main()

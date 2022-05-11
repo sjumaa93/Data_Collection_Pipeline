@@ -18,7 +18,7 @@ import urllib.request
 import sqlalchemy
 from sqlalchemy import create_engine
 import boto3
-import tempfile
+import os
 
 class Scraper:
     def __init__(self, url:str ='https://www.amazon.co.uk'):
@@ -98,7 +98,7 @@ class Scraper:
                     xp_image: str= "//*[@id='landingImage']"):
         print('Collecting Product Data ⌛')
 
-        for link in self.link_list[0:3]:
+        for link in self.link_list[0:10]:
             self.driver.get(link)
             time.sleep(2)
             self.product_data['Link'].append(link)
@@ -115,6 +115,8 @@ class Scraper:
             client = boto3.client('s3')
             client.upload_file(f'./images/{id}.jpg', 'myawsbucket9203', f'{id}')
             print('image uploaded successfully ⬆️')
+
+            
 
     '''
     This creates a dictionary, and adds the name, price and unique identifier to each entry
@@ -151,6 +153,15 @@ class Scraper:
 
     '''
     This method takes json file and uploads it to the s3 server
+    '''
+
+    def remove_local_images(self):
+        dir = './images/'
+        for f in os.listdir(dir):
+            os.remove(os.path.join(dir, f))
+
+    '''
+    This method removes local images in the directory '/images'
     '''
 
     def close_driver(self):
