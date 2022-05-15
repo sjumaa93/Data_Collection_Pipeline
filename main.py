@@ -11,5 +11,6 @@ def main():
     scraper.close_driver()
     scraper.remove_local_images()
 
+
 if __name__ == '__main__':
     main()

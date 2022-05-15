@@ -3,10 +3,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC 
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 import time
 import pandas as pd
@@ -14,21 +15,33 @@ import uuid
 import json
 import urllib.request
 
-
 import sqlalchemy
 from sqlalchemy import create_engine
 import boto3
 import os
 
+
 class Scraper:
-    def __init__(self, url:str ='https://www.amazon.co.uk'):
+    def __init__(self, url: str = 'https://www.amazon.co.uk'):
+        '''
+        This class is a scraper that can be used to retrieve data from
+        different websites
+
+        The list of product URLs and the file data dictionary are initialized
+        in this class
+
+        The engine is also initialized in this class
+        '''
         self.url = url
-        #self.driver = Chrome(ChromeDriveManager().install())
-        self.driver = Chrome('./chromedriver')
+        options = Options()
+        # options.add_argument('--headless')
+
+        self.driver = Chrome(ChromeDriverManager().install(), options=options)
+        # self.driver = Chrome('./chromedriver')
         self.driver.get(url)
 
         self.link_list = []
-        self.product_data = {'Link':[],'Name':[],'Price':[],'UUID':[],}
+        self.product_data = {'Link': [], 'Name': [], 'Price': [], 'UUID': []}
 
         DATABASE_TYPE = 'postgresql'
         DBAPI = 'psycopg2'
@@ -41,16 +54,10 @@ class Scraper:
         self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}")
         self.client = boto3.client('s3')
 
-    '''
-    This class is a scraper that can be used to retrieve data from different websites
-
-    The list of product URLs and the file data dictionary are initialized in this class
-
-    The engine is also initialized in this class
-    '''
-
-
     def accept_cookies(self, xpath: str = "//span[contains(@class,'on-primary')]"):
+        '''
+        This method looks for and clicks the accept cookies button
+        '''
         try:
             time.sleep(1)
             self.driver.find_element(By.XPATH, xpath).click()
@@ -58,46 +65,45 @@ class Scraper:
         except:
             print('No cookies found')
 
-    '''
-    This method looks for and clicks the accept cookies button
-    '''
-
     def search_site(self, xpath: str = "//input[contains(@id, 'search')]", query: str = 'Mobile Phones'):
+        '''
+        This method finds the search bar and enters a search query
+        '''
         time.sleep(1)
         searchbox = self.driver.find_element(By.XPATH, xpath)
         searchbox.send_keys(query)
         self.click_go_button()
 
-    '''
-    This method finds the search bar and enters a search query
-    '''
-
-    def click_go_button(self,xpath: str= "//input[@value='Go']"):
+    def click_go_button(self, xpath: str = "//input[@value='Go']"):
+        '''
+        This method searches for the 'go' button on the site
+        '''
         time.sleep(1)
         self.driver.find_element(By.XPATH, xpath).click()
         print('Searching site ⌛')
 
-    '''
-    This method searches for the 'go' button on the site
-    '''
-
-    def find_links(self, xp_html: str= "//h2[@class='a-size-mini a-spacing-none a-color-base s-line-clamp-2']"):
+    def find_links(self, xp_html: str = "//h2[@class='a-size-mini a-spacing-none a-color-base s-line-clamp-2']"):
+        '''
+        This method finds all the links on the page and stores them in a list
+        '''
         time.sleep(2)
         
         container = self.driver.find_elements(By.XPATH, xp_html)
         for link in container:
             self.link_list.append(link.find_element(By.TAG_NAME, 'a').get_attribute('href'))
-
-    '''
-    This method finds all the links on the page and stores them in a list
-    '''
     
-    def create_dict(self, 
-                    xp_title: str="//span[contains(@class, 'a-size-large product-title-word-break')]", 
-                    xp_price: str="//span[contains(@class, 'a-price-whole')]",
-                    xp_image: str= "//*[@id='landingImage']"):
-        print('Collecting Product Data ⌛')
+    def create_dict(self,
+                    xp_title: str = "//span[contains(@class, 'a-size-large product-title-word-break')]",
+                    xp_price: str = "//span[contains(@class, 'a-price-whole')]",
+                    xp_image: str = "//*[@id='landingImage']"):
+        print('Collecting Product Data please wait... ⌛')
+        '''
+        This creates a dictionary, and adds the name, price and unique identifier to each entry
 
+        This method also downloads the images and stores them in the images folder
+
+        It then uploads the images to an s3 bucket
+        '''
         for link in self.link_list[0:10]:
             self.driver.get(link)
             time.sleep(2)
@@ -110,39 +116,32 @@ class Scraper:
             self.product_data['UUID'].append(id)
             image_url = self.driver.find_element(By.XPATH, xp_image).get_attribute('src')
             urllib.request.urlretrieve(image_url, f"images/{id}.jpg")
-            print('Product Scraped Successfully ✅')
-            
+
             client = boto3.client('s3')
             client.upload_file(f'./images/{id}.jpg', 'myawsbucket9203', f'{id}')
-            print('image uploaded successfully ⬆️')
 
-            
+        print('Product Scraped Successfully ✅')
+        print('Images Uploaded successfully ⬆️')
 
-    '''
-    This creates a dictionary, and adds the name, price and unique identifier to each entry
-
-    This class also downloads the images and stores them in the images folder
-
-    It then uploads the images to an s3 bucket
-    '''
-    
     def create_json(self):
-        with open(f"raw_data.json", "w") as f:
-                    json.dump(self.product_data, f)
+        '''
+        This method takes the dictionary and posts it as a json file
+        '''
+        with open("raw_data.json", "w") as f:
+            json.dump(self.product_data, f)
         print('Saved as raw_data.json 💾')
 
         from botocore.config import Config
 
-        my_config = Config(region_name = 'us-east-1')
+        my_config = Config(region_name='us-east-1')
         client = boto3.client('s3', config=my_config)
 
-        client.upload_file('raw_data.json','myawsbucket9203','data.json')
-
-    '''
-    This method takes the dictionary and posts it as a json file
-    '''
+        client.upload_file('raw_data.json', 'myawsbucket9203', 'data.json')
 
     def json_to_sql(self):
+        '''
+        This method takes json file and uploads it to the s3 server
+        '''
         with open('./raw_data.json', 'r') as filename:
             data = json.load(filename)
             df = pd.DataFrame(data)
@@ -151,22 +150,16 @@ class Scraper:
             df.to_sql('raw_data', con=self.engine, if_exists='replace')
             print('uploaded to SQL database ⬆️')
 
-    '''
-    This method takes json file and uploads it to the s3 server
-    '''
-
     def remove_local_images(self):
+        '''
+        This method removes local images in the directory '/images'
+        '''
         dir = './images/'
         for f in os.listdir(dir):
             os.remove(os.path.join(dir, f))
 
-    '''
-    This method removes local images in the directory '/images'
-    '''
-
     def close_driver(self):
+        '''
+        This method closes the driver
+        '''
         self.driver.quit()
-
-    '''
-    This method closes the driver
-    '''
