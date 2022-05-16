@@ -1,22 +1,20 @@
-from selenium import webdriver
+# from selenium import webdriver
+# from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
+# from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from sqlalchemy import create_engine
 
 import time
 import pandas as pd
 import uuid
 import json
 import urllib.request
-
 import sqlalchemy
-from sqlalchemy import create_engine
 import boto3
 import os
 
@@ -25,7 +23,7 @@ class Scraper:
     def __init__(self, url: str = 'https://www.amazon.co.uk'):
         '''
         This class is a scraper that can be used to retrieve data from
-        different websites
+        amazon, based on a search term
 
         The list of product URLs and the file data dictionary are initialized
         in this class
@@ -53,6 +51,7 @@ class Scraper:
 
         self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}")
         self.client = boto3.client('s3')
+        return
 
     def accept_cookies(self, xpath: str = "//span[contains(@class,'on-primary')]"):
         '''
@@ -64,15 +63,17 @@ class Scraper:
             print('Cookies Accepted ✅')
         except:
             print('No cookies found')
+        return
 
     def search_site(self, xpath: str = "//input[contains(@id, 'search')]", query: str = 'Mobile Phones'):
         '''
-        This method finds the search bar and enters a search query
+        This method finds the search bar and enters a search query.
         '''
         time.sleep(1)
         searchbox = self.driver.find_element(By.XPATH, xpath)
         searchbox.send_keys(query)
         self.click_go_button()
+        return
 
     def click_go_button(self, xpath: str = "//input[@value='Go']"):
         '''
@@ -81,6 +82,7 @@ class Scraper:
         time.sleep(1)
         self.driver.find_element(By.XPATH, xpath).click()
         print('Searching site ⌛')
+        return
 
     def find_links(self, xp_html: str = "//h2[@class='a-size-mini a-spacing-none a-color-base s-line-clamp-2']"):
         '''
@@ -91,6 +93,7 @@ class Scraper:
         container = self.driver.find_elements(By.XPATH, xp_html)
         for link in container:
             self.link_list.append(link.find_element(By.TAG_NAME, 'a').get_attribute('href'))
+        return
     
     def create_dict(self,
                     xp_title: str = "//span[contains(@class, 'a-size-large product-title-word-break')]",
@@ -122,6 +125,7 @@ class Scraper:
 
         print('Product Scraped Successfully ✅')
         print('Images Uploaded successfully ⬆️')
+        return
 
     def create_json(self):
         '''
@@ -137,6 +141,7 @@ class Scraper:
         client = boto3.client('s3', config=my_config)
 
         client.upload_file('raw_data.json', 'myawsbucket9203', 'data.json')
+        return
 
     def json_to_sql(self):
         '''
@@ -149,6 +154,7 @@ class Scraper:
             self.engine.connect()
             df.to_sql('raw_data', con=self.engine, if_exists='replace')
             print('uploaded to SQL database ⬆️')
+        return
 
     def remove_local_images(self):
         '''
@@ -157,9 +163,11 @@ class Scraper:
         dir = './images/'
         for f in os.listdir(dir):
             os.remove(os.path.join(dir, f))
+        return
 
     def close_driver(self):
         '''
         This method closes the driver
         '''
         self.driver.quit()
+        return
