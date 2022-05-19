@@ -6,10 +6,10 @@ def main():
     scraper.search_site()
     scraper.find_links()
     scraper.create_dict()
+    scraper.remove_local_images()
     scraper.create_json()
     scraper.json_to_sql()
     scraper.close_driver()
-    scraper.remove_local_images()
 
 
 if __name__ == '__main__':

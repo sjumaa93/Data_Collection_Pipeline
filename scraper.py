@@ -14,7 +14,7 @@ import pandas as pd
 import uuid
 import json
 import urllib.request
-import sqlalchemy
+import urllib.parse
 import boto3
 import os
 
@@ -39,7 +39,8 @@ class Scraper:
         self.driver.get(url)
 
         self.link_list = []
-        self.product_data = {'Link': [], 'Name': [], 'Price': [], 'UUID': []}
+        self.product_id = []
+        self.product_data = {'Link': [], 'Name': [], 'Price': [], 'UUID': [], 'Product_ID': []}
 
         DATABASE_TYPE = 'postgresql'
         DBAPI = 'psycopg2'
@@ -89,12 +90,12 @@ class Scraper:
         This method finds all the links on the page and stores them in a list
         '''
         time.sleep(2)
-        
+
         container = self.driver.find_elements(By.XPATH, xp_html)
         for link in container:
             self.link_list.append(link.find_element(By.TAG_NAME, 'a').get_attribute('href'))
         return
-    
+
     def create_dict(self,
                     xp_title: str = "//span[contains(@class, 'a-size-large product-title-word-break')]",
                     xp_price: str = "//span[contains(@class, 'a-price-whole')]",
@@ -107,24 +108,38 @@ class Scraper:
 
         It then uploads the images to an s3 bucket
         '''
-        for link in self.link_list[0:10]:
+        self.engine.connect()
+        sql_ids = self.engine.execute("select product_id from raw_data")
+        sql_id_list = sql_ids.fetchall()
+        print(sql_id_list)
+
+        for link in self.link_list[0:3]:
             self.driver.get(link)
             time.sleep(2)
-            self.product_data['Link'].append(link)
-            name = self.driver.find_element(By.XPATH, xp_title).text
-            self.product_data['Name'].append(name)
-            price = self.driver.find_element(By.XPATH, xp_price).text
-            self.product_data['Price'].append(price)
-            id = str(uuid.uuid4())
-            self.product_data['UUID'].append(id)
-            image_url = self.driver.find_element(By.XPATH, xp_image).get_attribute('src')
-            urllib.request.urlretrieve(image_url, f"images/{id}.jpg")
 
-            client = boto3.client('s3')
-            client.upload_file(f'./images/{id}.jpg', 'myawsbucket9203', f'{id}')
+            # Gets the product ID from the URL
+            current_link = self.driver.current_url
+            product_id = current_link.split('dp/')[1].split('/')[0]
+            if (f'{product_id}',) in sql_id_list:
+                print('Already Scraped')
+            else:
+                print(product_id)
+                self.product_id.append(product_id)
+                simple_link = (f'https://www.amazon.co.uk/dp/{product_id}')
+                self.product_data['Link'].append(simple_link)
+                name = self.driver.find_element(By.XPATH, xp_title).text
+                self.product_data['Name'].append(name)
+                price = self.driver.find_element(By.XPATH, xp_price).text
+                self.product_data['Price'].append(price)
+                id = str(uuid.uuid4())
+                self.product_data['UUID'].append(id)
+                self.product_data['Product_ID'].append(product_id)
+                image_url = self.driver.find_element(By.XPATH, xp_image).get_attribute('src')
+                urllib.request.urlretrieve(image_url, f"images/{id}.jpg")
 
-        print('Product Scraped Successfully ✅')
-        print('Images Uploaded successfully ⬆️')
+                client = boto3.client('s3')
+                client.upload_file(f'./images/{id}.jpg', 'myawsbucket9203', f'{id}')
+                print('Product Scraped Successfully ✅')
         return
 
     def create_json(self):
@@ -149,10 +164,10 @@ class Scraper:
         '''
         with open('./raw_data.json', 'r') as filename:
             data = json.load(filename)
-            df = pd.DataFrame(data)
-            df.columns = df.columns.str.lower()
+            dataframe = pd.DataFrame(data)
+            dataframe.columns = dataframe.columns.str.lower()
             self.engine.connect()
-            df.to_sql('raw_data', con=self.engine, if_exists='replace')
+            dataframe.to_sql('raw_data', con=self.engine, if_exists='append')
             print('uploaded to SQL database ⬆️')
         return
 
