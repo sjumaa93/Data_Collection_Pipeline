@@ -41,6 +41,7 @@ class Scraper:
         self.link_list = []
         self.product_id = []
         self.product_data = {'Link': [], 'Name': [], 'Price': [], 'UUID': [], 'Product_ID': []}
+        self.products_to_scape = 8
 
         DATABASE_TYPE = 'postgresql'
         DBAPI = 'psycopg2'
@@ -111,9 +112,8 @@ class Scraper:
         self.engine.connect()
         sql_ids = self.engine.execute("select product_id from raw_data")
         sql_id_list = sql_ids.fetchall()
-        print(sql_id_list)
 
-        for link in self.link_list[0:3]:
+        for link in self.link_list[0:self.products_to_scape]:
             self.driver.get(link)
             time.sleep(2)
 
@@ -123,7 +123,6 @@ class Scraper:
             if (f'{product_id}',) in sql_id_list:
                 print('Already Scraped')
             else:
-                print(product_id)
                 self.product_id.append(product_id)
                 simple_link = (f'https://www.amazon.co.uk/dp/{product_id}')
                 self.product_data['Link'].append(simple_link)
@@ -135,10 +134,10 @@ class Scraper:
                 self.product_data['UUID'].append(id)
                 self.product_data['Product_ID'].append(product_id)
                 image_url = self.driver.find_element(By.XPATH, xp_image).get_attribute('src')
-                urllib.request.urlretrieve(image_url, f"images/{id}.jpg")
+                urllib.request.urlretrieve(image_url, f"images/{product_id}.jpg")
 
                 client = boto3.client('s3')
-                client.upload_file(f'./images/{id}.jpg', 'myawsbucket9203', f'{id}')
+                client.upload_file(f'./images/{product_id}.jpg', 'myawsbucket9203', f'{product_id}')
                 print('Product Scraped Successfully ✅')
         return
 
