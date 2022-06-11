@@ -10,7 +10,6 @@ The webscraper retrieves data from Amazon and uploads it to an RDS database and 
 - The data it collects is then saved locally and on an s3 bucket
 - Image data is also uploaded to an s3 bucket saved as the product ID and the image name
 - The data is then tabularized and stored in an AWS Postgres RDS system
-- 
 
 # How the scraper works
 - In this part of the project I found a website where I want to scrape information from, and build a scraper around it.
