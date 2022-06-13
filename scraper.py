@@ -52,7 +52,7 @@ class Scraper:
         DBAPI = 'psycopg2'
         HOST = 'database.cqn1abbztdx3.us-east-1.rds.amazonaws.com'
         USER = 'postgres'
-        PASSWORD = input('Enter Database Password')
+        PASSWORD = input('Enter Database Password: ')
         DATABASE = 'postgres'
         PORT = 5432
 
