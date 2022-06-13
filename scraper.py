@@ -45,13 +45,14 @@ class Scraper:
         self.link_list = []
         self.product_id = []
         self.product_data = {'Link': [], 'Name': [], 'Price': [], 'UUID': [], 'Product_ID': []}
-        self.products_to_scape = 8
+        self.products_to_scape = 10
+
 
         DATABASE_TYPE = 'postgresql'
         DBAPI = 'psycopg2'
         HOST = 'database.cqn1abbztdx3.us-east-1.rds.amazonaws.com'
         USER = 'postgres'
-        PASSWORD = 'Blackberry12'
+        PASSWORD = input('Enter Database Password')
         DATABASE = 'postgres'
         PORT = 5432
 
@@ -141,7 +142,7 @@ class Scraper:
                 urllib.request.urlretrieve(image_url, f"images/{product_id}.jpg")
 
                 client = boto3.client('s3')
-                client.upload_file(f'./images/{product_id}.jpg', 'myawsbucket9203', f'{product_id}')
+                #client.upload_file(f'./images/{product_id}.jpg', 'myawsbucket9203', f'{product_id}')
                 print('Product Scraped Successfully ✅')
         return
 
@@ -158,7 +159,7 @@ class Scraper:
         my_config = Config(region_name='us-east-1')
         client = boto3.client('s3', config=my_config)
 
-        client.upload_file('raw_data.json', 'myawsbucket9203', 'data.json')
+        # client.upload_file('raw_data.json', 'myawsbucket9203', 'data.json')
         return
 
     def json_to_sql(self):
