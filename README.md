@@ -18,3 +18,26 @@ The webscraper retrieves data from Amazon and uploads it to an RDS database and 
 - I created methods to accept cookies, search the site, collect titles and collect prices to name a few.
 - I created a unique identifier using uuid.
 - Once the scraper runs it stores information into a dictionary, which I save as a json file.
+
+# Documenting and Testing
+- I created tests on my scraper to make sure the scraper runs as it should
+- One of the tests looks at whether we continue past the cookie page
+- Another test looks for an attribute only found on the search results page to determine we on the correct page
+
+# Resraping
+- To prevent rescraping the user ID from the product is compared with the user IDs in the AWS database
+- These product IDs will always be unique and that is why I have used them as a point of reference to check if a product has already been scraper
+- If a product has been scraper the scraper will simply move onto the next product and continue scraping.
+
+# Containerising the scraper & Monitoring
+- The application is containerized using docker and runs on an AWS EC2 instance on the cloud. 
+- A prometheus monitoring system is also deployed to monitor the health of the EC2 host
+- The docker and the containerized application. The monitored metrics are tracked by a Grafana dashboard.
+
+# CI/CD Pipeline for Docker Image
+- The system also implements CI/CD with the help of Github actions.
+- A push to the main branch of the repository will trigger a build of the docker image of the application.
+- The image is then expected to be pulled at regular intervals during the scraping process.
+
+
+
