@@ -24,7 +24,7 @@ The webscraper retrieves data from Amazon and uploads it to an RDS database and 
 - One of the tests looks at whether we continue past the cookie page
 - Another test looks for an attribute only found on the search results page to determine we on the correct page
 
-# Resraping
+# Preventing Rescraping
 - To prevent rescraping the user ID from the product is compared with the user IDs in the AWS database
 - These product IDs will always be unique and that is why I have used them as a point of reference to check if a product has already been scraper
 - If a product has been scraper the scraper will simply move onto the next product and continue scraping.
