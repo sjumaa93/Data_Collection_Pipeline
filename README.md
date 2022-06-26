@@ -31,8 +31,8 @@ The webscraper retrieves data from Amazon and uploads it to an RDS database and 
 
 # Containerising the scraper & Monitoring
 - The application is containerized using docker and runs on an AWS EC2 instance on the cloud. 
-- A prometheus monitoring system is also deployed to monitor the health of the EC2 host
-- The docker and the containerized application. The monitored metrics are tracked by a Grafana dashboard.
+- A prometheus monitoring system is also deployed to monitor the health of the EC2 host the docker and the containerized application.
+- The monitored metrics are tracked by a Grafana dashboard.
 
 # CI/CD Pipeline for Docker Image
 - The system also implements CI/CD with the help of Github actions.
