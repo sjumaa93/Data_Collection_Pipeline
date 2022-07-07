@@ -4,7 +4,6 @@ In this project I have implemented an industry grade data collection pipeline th
 The webscraper retrieves data from Amazon and uploads it to an RDS database and their associated images to an S3 bucket. This can potentially be used for tracking product price changes for a price comparison website.
 
 # How the system works
-![alt text](https://i.ibb.co/ZG0jNVk/Screenshot-2022-05-19-at-8-11-31-pm.png)
 - The system relies on selenium to automate web navigation and collecting all the neccasary attributes from Amazon.co.uk
 - Each project has a unique ID which will ensure only unique data is scraped
 - The data it collects is then saved locally and on an s3 bucket
